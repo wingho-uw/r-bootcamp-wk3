@@ -1,0 +1,153 @@
+---
+title: "ggplot2 demo, part 1"
+author: "Wing-Ho Ko"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading packages
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## Illustrative example
+
+### Inspecting the `mpg` dataset
+
+The `mpg` dataset provides information about the fuel economy of popular car models in 1999 and 2008. It comes included with ggplot2:
+
+```{r}
+glimpse(mpg)
+```
+
+### Basic scatter plot
+
+We'll plot the highway mile per gallon (`hwy`) against the engine displacement in liter (`displ`):
+
+```{r}
+ggplot(data=mpg, mapping=aes(x=displ, y=hwy)) + 
+  geom_point()
+```
+
+### Titles, axes, and position scales
+
+Adding title and axes labels to a plot:
+
+```{r}
+ggplot(data=mpg, mapping=aes(x=displ, y=hwy)) + 
+  geom_point() + 
+  ggtitle("Highway fuel efficiency vs engine size") +
+  xlab("Engine displacement (L)") + 
+  ylab("highway mile per gallon")
+```
+
+### Customizing theme
+
+Use `theme_bw()` instead the default `theme_gray()`, and change the font size of a few elements via `theme()`
+
+```{r}
+ggplot(data=mpg, mapping=aes(x=displ, y=hwy)) + 
+  geom_point() + 
+  ggtitle("Highway fuel efficiency vs engine size") +
+  xlab("Engine displacement (L)") + 
+  ylab("highway mile per gallon") +
+  theme_bw() + theme(
+    plot.title = element_text(face="bold", size=20),
+    axis.title = element_text(size=16),
+    axis.text.x = element_text(size=14),
+    axis.text.y = element_text(size=14)
+  )
+```
+
+### Assigning parts of the plot composition to variables
+
+Assigning part of the plot composition to variables
+
+```{r}
+mpg_points <- ggplot(data=mpg, mapping=aes(x=displ, y=hwy)) + 
+  geom_point()
+
+titles <- labs(
+  title="Highway fuel efficiency vs engine size",
+  x = "Engine displacement (L)",
+  y = "highway mile per gallon"
+)
+
+my_theme <-  theme_bw() + theme(
+    plot.title = element_text(face="bold", size=20),
+    axis.title = element_text(size=16),
+    axis.text.x = element_text(size=14),
+    axis.text.y = element_text(size=14)
+  )
+```
+
+Compose and print the plot from variables
+
+```{r}
+mpg_points + titles + my_theme
+```
+
+Export the resulting plot as svg:
+
+```{r}
+ggsave("mpg_scatter.svg", width=6, height=4)
+```
+
+### Adding more aesthetics mapping
+
+Adding color and shape to distinguish between different drive mode
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy, color=drv, shape=drv)) + 
+  geom_point() + titles + my_theme
+```
+
+Plot highway mpg (`hwy`) against city mpg (`cty`), with size indicating engine displacement:
+
+```{r}
+ggplot(mpg, aes(x=cty, y=hwy, size=displ)) + geom_point() + 
+  ggtitle("Two measures of fuel efficiency") + 
+  xlab("city mile per gallon") +
+  ylab("highway mile per gallon") +
+  my_theme
+```
+
+Customize visual properties independent of attribute values of observations
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy)) + 
+  geom_point(color="blue")
+```
+
+### Adding additional layers
+
+Adding an additional layer (linear least square fit). Note that BOTH the fit and the data are segregated by drive type and use the same underlying data
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy, color=drv, shape=drv)) + 
+  geom_point() +
+  geom_smooth(method="lm")
+```
+
+If we want to have a common best fit line across drive type, we need to restrict the color and shape mapping to the scatter plot:
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy)) + 
+  geom_point(aes(color=drv, shape=drv)) +
+  geom_smooth(method="lm", color="black")
+```
+
+Figure with data from two sources: plot the `mpg` observations (1999-2008) against a rolling fit of data from `mtcars` observations (1973-1974)
+
+```{r}
+ggplot() + 
+  geom_point(aes(x=displ, y=hwy, color=drv, shape=drv), mpg) +
+  geom_smooth(aes(x=0.0163871 * disp, y=mpg), mtcars, method="loess", color="black")
+```
+

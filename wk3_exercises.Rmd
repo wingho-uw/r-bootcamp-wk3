@@ -1,0 +1,53 @@
+---
+title: "Week 2 exercises solutions"
+author: "Wing-Ho Ko"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading common packages
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(janitor)
+library(ggplot2)
+library(palmerpenguins)
+```
+
+### Exercise 1
+
+1. Make a plot of the Palmer penguin dataset, with flipper length on the horizontal axis and body mass on the vertical axis. Use color and shape to distinguish between different **species** of penguins
+
+2. Focus only on the Adelie penguins. Plot flipper length on the horizontal axis and bill length on the vertical axis, and use size to indicate body mass. Use also color and shape to distinguish between penguins from different islands
+
+3. Make a box plot of the body mass of the penguins as a function of species
+
+### Exercise 2
+
+Revisit the Portege Bay monthly weather normal data. Again plot the normal temperature average, as points joined by solid line. Then, use ribbons to indicate the average temperature high and average temperature low. Finally, add a horizontal dash line that shows the annual average normal temperature (53.5°F).
+
+### Exercise 3
+
+Hatton et. al. (doi: [10.1126/science.aac6284](https://doi.org/10.1126/science.aac6284)) found that predator biomass and prey biomass follows a power-law relationship across broad communities. Part of the data they used, for the case of Atlantic Ocean phytoplankton and microzooplankton, are extracted to the file "marine_prey_predator_biomass.csv" under the data folder.
+
+Using the said data, make a scatter plot of predator (y) versus prey (x) biomass on log-log scale. Also fix the x and y axes labels so that the unit has proper superscript.
+
+### Exercise 4
+
+The data file `mercator_no3_chl.csv` contains NO₃⁻ concentration (in mmol m⁻³ and chlorophyll concentration (in mg m⁻³), measured in June 2024, averaged over longitude between 150°W and 130°W, as functions of latitude and depth.
+
+1. Make a raster plot (using `geom_tile()`, since the depths are uneven) of chlorophyll concentration as function of latitude (x) and depth (y). Use the usual oceanographic convention that depth increases downward, and use a sensible color scheme.
+
+2. Make a second raster plot with the same settings except making the color scale logarithmic
+
+Hint: in your `gemo_tile()` call you will also need to assign aesthetics to `width` and `height`. The corresponding variables have been calculated and included in the csv file.)
+
+### Exercise 5
+
+Going back to the penguins dataset, make a figure consisting of 9 panels: 3 columns that indicate different species and 3 rows that indicate different islands. On each panel plots bill length against body mass. Make sure that all panels share the same set of x and y axes
+

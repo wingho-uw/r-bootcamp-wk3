@@ -1,0 +1,328 @@
+---
+title: "ggplot2 demo, part 3"
+author: "Wing-Ho Ko"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading packages
+
+```{r}
+library(stringr)
+library(ggplot2)
+library(dplyr)
+```
+
+## Titles, axes, and position scales
+
+### Titles and axes labels
+
+Adding x- and y-axis labels and title to a plot:
+
+```{r}
+mpg_point <- ggplot(mpg, aes(x=displ, y=hwy)) + geom_point()
+  
+mpg_point + ggtitle("Highway fuel efficiency vs engine size") +
+  xlab("Engine displacement (L)") + ylab("highway mile per gallon")
+```
+
+Alternative implementation using `labs()`
+
+```{r}
+mpg_point + labs(
+  title="Highway fuel efficiency vs engine size",
+  x = "Engine displacement (L)",
+  y = "highway mile per gallon"
+)
+```
+
+Alternative implementation using the underlying `scale...()` functions
+
+```{r}
+mpg_point + ggtitle("Highway fuel efficiency vs engine size") +
+  scale_x_continuous(name="Engine displacement (L)") + 
+  scale_y_continuous(name="highway mile per gallon")
+```
+`
+A rich-text y label created with `plotmath`, and unicode character shown in title
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy/cty)) + 
+  geom_point(size=2) +
+  labs(
+    title="Highway fuel efficiency ε vs engine size",
+    x = "Engine displacement (L)",
+    y = expression(bgroup( "(", frac("hwy","cty"), ")" )) 
+  )
+```
+
+### Customizing limits of plot
+
+Plotting the saving rate of the `economics` dataset using defaults:
+
+```{r}
+ec_plot <- ggplot(data=economics, aes(x=date, y=psavert)) + geom_line()
+
+print(ec_plot)
+```
+
+**Subset** the data to go from 1990 to 2010 using `xlim()` (note that ggplot automatically insert some buffering space between the left and right limits):
+
+```{r}
+ec_plot + xlim(as.Date(c("1990-01-01", "2010-12-31")))
+```
+
+**Zoom in** to the data to go from 1990 to 2010 using `xlim()`:
+
+```{r}
+ec_plot + coord_cartesian(xlim=as.Date(c("1990-01-01", "2010-12-31")))
+```
+
+### Customizing ticks locations and labels
+
+Plot of mpg data using the defaults:
+
+```{r}
+mpg_plot <- ggplot(mpg, aes(x=displ, y=hwy)) + geom_point()
+
+print(mpg_plot)
+```
+
+Use `scale_x_continuous()` to set the location of ticks:
+
+```{r}
+mpg_plot + scale_x_continuous(limits=c(0,8), breaks=c(0,2,4,6,8))
+```
+
+Use `scale_x_continuous()` to customize the x labels:
+
+```{r}
+mpg_plot + scale_x_continuous(
+  breaks = seq(2,7), 
+  labels = str_c(seq(2,7), "L")
+)
+```
+
+### Transforming axes scales
+
+Plotting simple exponential data
+
+```{r}
+exp_data <- data.frame(
+  x = seq(0, 10, length.out=101),
+  y = exp(-seq(0, 10, length.out=101))
+)
+
+exp_plot <- ggplot(exp_data, aes(x=x, y=y)) + geom_line()
+
+print(exp_plot)
+```
+
+Plotting the same data in log-linear scale
+
+```{r}
+exp_plot + scale_y_continuous(transform="log10")
+```
+
+Same plot, with friendier y=axis labels (again using `plotmath`)
+
+```{r}
+exp_plot + scale_y_continuous(
+  transform="log10",
+  breaks=10^seq(0,-4, -1),
+  labels=expression("10"^"0", "10"^"-1", "10"^"-2", "10"^"-3", "10"^"-4")
+)
+  
+```
+
+### Setting aspect ratio
+
+Fix the aspect ration to be 1:1
+
+```{r}
+pow_data <- data.frame(
+  x = seq(0, 1, length.out=101),
+  y = seq(0, 1, length.out=101) ^ 2
+)
+
+pow_base <- ggplot(exp_data, aes(x=x, y=y)) + geom_line()
+
+pow_base + coord_fixed()
+```
+
+Change the aspect ratio to 1:0.5
+
+```{r}
+pow_base + coord_fixed(0.5)
+```
+
+### Second axis
+
+Check summary statistics to decide how to align the the axes
+
+```{r}
+summary(economics)
+```
+
+Decision: unemploy with limits c(0, 18000), corresponding to uempmed limits of c(0, 10)
+
+Plotting unemployment number and unemployment duration on the same figure. 
+
+Note also the use of "constant" aesthetics
+
+```{r}
+ggplot(economics) + 
+  geom_line(aes(x=date, y=unemploy, linetype="unemploy", color="unemploy")) + 
+  geom_line(aes(x=date, y=1800 * uempmed, linetype="uempmed", color="uempmed")) +
+  scale_y_continuous(
+    limits=c(0, 18000), 
+    sec.axis = sec_axis(~ . / 1800, name="uempmed")
+  ) + labs(
+    color="data series", linetype="data series"
+  )
+```
+
+Use the convenient function defined in `sec_axis_pair()`
+
+```{r}
+source("sec_axis_pair.R")
+
+pair <- sec_axis_pair(c(0, 18000), c(0, 10))
+
+ggplot(economics) + 
+  geom_line(aes(x=date, y=unemploy, linetype="unemploy", color="unemploy")) + 
+  geom_line(aes(x=date, y=pair$func(uempmed), linetype="uempmed", color="uempmed")) +
+  scale_y_continuous(
+    limits=c(0, 18000), 
+    sec.axis = sec_axis(pair$formula, name="uempmed")
+  ) + labs(
+    color="data series", linetype="data series"
+  )
+```
+
+### Date and datetime axes
+
+Default setting for date axis
+
+```{r}
+ec_plot <- ggplot(economics, aes(x=date, y=psavert)) + geom_line()
+print(ec_plot)
+```
+
+Make ticks every 5 years
+
+```{r}
+ec_plot + scale_x_date(date_breaks = "5 years", date_labels="%Y")
+```
+
+Change formatting of date label
+
+```{r}
+ec_plot + scale_x_date(date_breaks = "10 years", date_labels="%Y-%m-%d")
+```
+
+## Scales for other aesthetics
+
+### Scales for edge and fill colors
+
+Data behind raster plots
+
+```{r}
+fine_frame <- read_csv("data/polynomial_mul_gaussian_finer.csv")
+```
+
+Customize raster fills (a _continuous_ color scale) using the viridis color set (see <https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html> for documentation)
+
+```{r}
+cont_filled <- ggplot(fine_frame, aes(x=x, y=y, fill=z)) + geom_raster()
+
+cont_filled + scale_fill_viridis_c(option = "magma")
+```
+
+Repeat the above but use the brewer color set (see <https://r-graph-gallery.com/38-rcolorbrewers-palettes.html> for illustration)
+
+```{r}
+cont_filled + scale_fill_distiller(palette = "RdYlBu")
+```
+
+Customize fill color of columns in a `geom_col()` plot (a _discrete_ color scale) using the viridis color set:
+
+```{r}
+mpg_by_class <- mpg |> group_by(class) |> 
+  summarize(hwy=mean(hwy), cty=mean(cty))
+
+mpg_class_plot <- ggplot(mpg_by_class, aes(x=class, y=hwy, fill=class)) + 
+  geom_col()
+
+mpg_class_plot + scale_fill_viridis_d(option="turbo")
+```
+
+Repeat the same using the brewer scale
+
+```{r}
+mpg_class_plot + scale_fill_brewer(palette="Dark2")
+```
+
+### Linear versus logarithmic color scale
+
+Load data that represent an exponentiated parabolic saddle point
+
+```{r}
+exp_saddle <- read_csv("data/exponential_saddle.csv")
+```
+
+Plot and exponentiated saddle point in linear color scale
+
+```{r}
+exp_saddle_plot <- ggplot(df2, aes(x=x, y=y, fill=z)) + geom_raster()
+exp_saddle_plot + scale_fill_viridis_c(option = "magma")
+```
+
+Plot the same in logrithmatic color scale
+
+```{r}
+exp_saddle_plot + scale_fill_viridis_c(option = "magma", transform="log10")
+```
+
+### Scales for shape and linetype
+
+Specifying shape using `scale_shape_manual()`:
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy, shape=drv)) + geom_point() + 
+  scale_shape_manual(
+    values=c("square open", "diamond open", "triangle open")
+  )
+```
+
+Specify linetype using `scale_linetype_manual()`
+
+```{r}
+ggplot(mutate(economics, unemprt=100 * unemploy / pop), aes(x=date)) + 
+  geom_line(aes(y=psavert, linetype="saving")) +
+  geom_line(aes(y=unemprt, linetype="unemployment")) +
+  labs(linewidth="rate", y="rate") +
+  scale_linetype_manual(
+    values=c("dashed","dotted")
+  ) 
+```
+
+For both cases, see <https://ggplot2.tidyverse.org/articles/ggplot2-specs.html> for documentation
+
+### Legend and guides
+
+Customize the legend using `name`, `breaks`, and `labels` arguments of `scale...()`
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy, shape=drv)) + geom_point() + 
+  scale_shape_manual(
+    values=c("square filled", "diamond filled", "triangle filled"),
+    breaks=c("4", "r", "f"), 
+    labels=c("4-wheel drive", "rear-wheel drive", "forward-wheel drive"),
+    name="drive mode"
+  )
+```
+

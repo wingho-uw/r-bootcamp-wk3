@@ -1,0 +1,41 @@
+---
+title: "ggplot2 demo, part 4"
+author: "Wing-Ho Ko"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading packages
+
+```{r}
+library(ggplot2)
+library(readr)
+library(dplyr)
+```
+
+## Faceting
+
+Spreading across columns with common y axis:
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy)) + geom_point() + 
+  facet_grid(. ~ drv, scales="free_x")
+```
+
+Spreading across rows with common x axis
+
+```{r}
+ggplot(economics_long, aes(x=date, y=value)) + geom_line() +
+  facet_grid(variable ~ ., scales="free_y")
+```
+
+Faceting both rows and columns, with common x and y scales
+
+```{r}
+ggplot(mpg, aes(x=displ, y=hwy)) + geom_point() + 
+  facet_grid(cyl ~ drv, scales="free_x")
+```
+

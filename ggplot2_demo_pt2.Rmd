@@ -1,0 +1,226 @@
+---
+title: "ggplot2 demo, part 2"
+author: "Wing-Ho Ko"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading packages
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## Plot types (geoms)
+
+### Line plot: `geom_line()` and `geom_path()`
+
+Use the `economics` dataset included in ggplot2
+
+```{r}
+economics
+```
+
+Plot the percent saving rate (`psavert`) as a function of date (`date`)
+
+```{r}
+ggplot(economics, aes(x=date, y=psavert)) + geom_line()
+```
+
+Plot progression of unemployment population (`unemploy`) and unemployment time (`uempmed`) as path
+
+```{r}
+ggplot(economics) +
+    geom_path(aes(x = unemploy, y = uempmed, color=date))
+```
+
+### Including uncertainty: `geom_errorbar()` and `geom_ribbon()`
+
+Read the monthly weather normal (based on statistics from 1981 to 2010) at the Portege Bay NOAA station:
+
+```{r}
+monthly_normal <- read_csv("data/monthly_normal.csv")
+```
+
+```{r}
+monthly_normal
+```
+
+
+Plot the average monthly temperature, together with error bars
+
+```{r}
+ggplot(monthly_normal, aes(x=month, y=Tavg_normal)) +
+  geom_point() +
+  geom_errorbar(aes(
+    ymin = Tavg_normal - Tavg_stddev, 
+    ymax = Tavg_normal + Tavg_stddev
+  ), width=0.5)
+```
+
+Plot average monthly temperature, together with error ribbon
+
+```{r}
+ggplot(monthly_normal, aes(x=month, y=Tavg_normal)) +
+  geom_point(size=2) + geom_line() +
+  geom_ribbon(aes(
+    ymin = Tavg_normal - Tavg_stddev, 
+    ymax = Tavg_normal + Tavg_stddev),
+    alpha=0.1, color="blue", fill="cyan"
+  )
+```
+
+### Bar plot: `geom_bar()` and `geom_col()`
+
+Bar plot counting number of samples from each class of cars in `mpg`
+
+```{r}
+ggplot(mpg, aes(x=class)) + geom_bar()
+```
+
+Summarize average highway mile per gallon for each class
+
+```{r}
+mpg_by_class <- mpg |> group_by(class) |> 
+  summarize(hwy=mean(hwy), cty=mean(cty))
+```
+
+Plot class against (averaged) highway mile per gallon:
+
+```{r}
+ggplot(mpg_by_class, aes(x=class, y=hwy)) + geom_col()
+```
+
+Horizontal columns instead of vertical ones
+
+```{r}
+ggplot(mpg_by_class, aes(y=class, x=hwy)) + geom_col()
+```
+
+Use color to indicate different drive mode within a class
+
+```{r}
+ggplot(mpg, aes(x=class)) + geom_bar(aes(fill=drv))
+```
+
+### Histogram `geom_histogram()` and `geom_density()`
+
+Histogram of highway mile per gallon
+
+```{r}
+ggplot(mpg, aes(x=hwy)) + geom_histogram()
+```
+
+Specify precise bins with `binwidth` and `boundary`
+
+```{r}
+ggplot(mpg, aes(x=hwy)) + geom_histogram(binwidth=2.5, boundary=10)
+```
+
+Separate different drive mode using colors. Note that by default the different groups stack on top of each others
+
+```{r}
+ggplot(mpg, aes(x=hwy)) + 
+  geom_histogram(aes(fill=drv), binwidth=2.5, boundary=10)
+```
+
+### Categorical variables: `geom_boxplot()`
+
+Box plot of highway mile per gallon against class
+
+```{r}
+ggplot(mpg, aes(x=class, y=hwy)) + geom_boxplot()
+```
+
+Box plot including both class and drive mode
+
+```{r}
+ggplot(mpg, aes(x=class)) + 
+  geom_boxplot(
+    aes(y=hwy, color=drv), 
+    position=position_dodge2(preserve="single")
+  )
+```
+
+Horizontal box plot
+
+```{r}
+ggplot(mpg, aes(y=class, x=hwy)) + geom_boxplot()
+```
+
+### 3-dimensional data: `geom_contour()` and friends
+
+Loading data (gridded data formatted as a dataframe)
+
+```{r}
+dframe <- read_csv("data/polynomial_mul_gaussian.csv")
+```
+
+```{r}
+dframe
+```
+
+Create a filled contour plot based on the value of z
+
+```{r}
+ggplot(dframe, aes(x=x, y=y, z=z)) + geom_contour_filled()
+```
+
+Create a contour plot instead of filled contour plot
+
+```{r}
+ggplot(df, aes(x=x, y=y, z=z)) + 
+  geom_contour(aes(color=after_stat(level)))
+```
+
+Setting finer contour levels
+
+```{r}
+ggplot(df, aes(x=x, y=y, z=z)) + 
+  geom_contour(aes(color=after_stat(level)), binwidth=0.05)
+```
+
+### 3-dimensional data: `geom_tile()` and `geom_raster()`
+
+Instead of contour plot, use tile of values
+
+```{r}
+ggplot(df, aes(x=x, y=y, fill=z)) + geom_tile()
+```
+
+More efficient version using `geom_raster()` rather than `geom_tile()`
+
+```{r}
+ggplot(df, aes(x=x, y=y, fill=z)) + geom_raster()
+```
+
+Turn on interpolation:
+
+```{r}
+ggplot(df, aes(x=x, y=y, fill=z)) + geom_raster(interpolate=TRUE)
+```
+
+### Annotations
+
+Line annotations:
+
+```{r}
+ggplot(monthly_normal, aes(x=month, y=Tavg_normal)) +
+  geom_hline(yintercept=53.5, linewidth=2, color="orange") + 
+  geom_point() +
+  geom_errorbar(aes(
+    ymin = Tavg_normal - Tavg_stddev, 
+    ymax = Tavg_normal + Tavg_stddev
+  ), width=0.5)
+```
+
+```{r}
+ggplot(mpg_by_class, aes(y=class, x=hwy)) + 
+  geom_col() +
+  geom_vline(xintercept = mean(mpg$hwy), color="cyan", linewidth=2)
+```
