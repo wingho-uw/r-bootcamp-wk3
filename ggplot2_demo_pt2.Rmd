@@ -88,6 +88,8 @@ Summarize average highway mile per gallon for each class
 ```{r}
 mpg_by_class <- mpg |> group_by(class) |> 
   summarize(hwy=mean(hwy), cty=mean(cty))
+
+mpg_by_class
 ```
 
 Plot class against (averaged) highway mile per gallon:
@@ -108,7 +110,7 @@ Use color to indicate different drive mode within a class
 ggplot(mpg, aes(x=class)) + geom_bar(aes(fill=drv))
 ```
 
-### Histogram `geom_histogram()` and `geom_density()`
+### Histogram `geom_histogram()`
 
 Histogram of highway mile per gallon
 
@@ -174,14 +176,14 @@ ggplot(dframe, aes(x=x, y=y, z=z)) + geom_contour_filled()
 Create a contour plot instead of filled contour plot
 
 ```{r}
-ggplot(df, aes(x=x, y=y, z=z)) + 
+ggplot(dframe, aes(x=x, y=y, z=z)) + 
   geom_contour(aes(color=after_stat(level)))
 ```
 
 Setting finer contour levels
 
 ```{r}
-ggplot(df, aes(x=x, y=y, z=z)) + 
+ggplot(dframe, aes(x=x, y=y, z=z)) + 
   geom_contour(aes(color=after_stat(level)), binwidth=0.05)
 ```
 
@@ -190,19 +192,19 @@ ggplot(df, aes(x=x, y=y, z=z)) +
 Instead of contour plot, use tile of values
 
 ```{r}
-ggplot(df, aes(x=x, y=y, fill=z)) + geom_tile()
+ggplot(dframe, aes(x=x, y=y, fill=z)) + geom_tile()
 ```
 
 More efficient version using `geom_raster()` rather than `geom_tile()`
 
 ```{r}
-ggplot(df, aes(x=x, y=y, fill=z)) + geom_raster()
+ggplot(dframe, aes(x=x, y=y, fill=z)) + geom_raster()
 ```
 
 Turn on interpolation:
 
 ```{r}
-ggplot(df, aes(x=x, y=y, fill=z)) + geom_raster(interpolate=TRUE)
+ggplot(dframe, aes(x=x, y=y, fill=z)) + geom_raster(interpolate=TRUE)
 ```
 
 ### Annotations

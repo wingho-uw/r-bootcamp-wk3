@@ -149,7 +149,7 @@ pow_data <- data.frame(
   y = seq(0, 1, length.out=101) ^ 2
 )
 
-pow_base <- ggplot(exp_data, aes(x=x, y=y)) + geom_line()
+pow_base <- ggplot(pow_data, aes(x=x, y=y)) + geom_line()
 
 pow_base + coord_fixed()
 ```
@@ -278,11 +278,11 @@ exp_saddle <- read_csv("data/exponential_saddle.csv")
 Plot and exponentiated saddle point in linear color scale
 
 ```{r}
-exp_saddle_plot <- ggplot(df2, aes(x=x, y=y, fill=z)) + geom_raster()
+exp_saddle_plot <- ggplot(exp_saddle, aes(x=x, y=y, fill=z)) + geom_raster()
 exp_saddle_plot + scale_fill_viridis_c(option = "magma")
 ```
 
-Plot the same in logrithmatic color scale
+Plot the same in logarithmic color scale
 
 ```{r}
 exp_saddle_plot + scale_fill_viridis_c(option = "magma", transform="log10")
